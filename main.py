@@ -12,7 +12,7 @@ from exceptions import BookingNotAvailableException, BookingNotExistException, V
 
 
 app = FastAPI()
-dict_service = BookingsServiceDict()
+service = BookingsServiceDict()
 
 @app.post(
     '/api/bookings',
@@ -24,7 +24,7 @@ dict_service = BookingsServiceDict()
 )
 def post_booking(booking: Annotated[BookingCreate, Body(embed=True)]):
     try:
-        return dict_service.create_booking(booking)
+        return service.create_booking(booking)
     except ValidationException as e:
         return JSONResponse(dict(ErrorMessage(message=str(e))), status.HTTP_422_UNPROCESSABLE_CONTENT)
     except BookingNotAvailableException as e:
@@ -42,7 +42,7 @@ def get_bookings(date: Annotated[
     datetime.date | None,
     Query(description='(необязательно) Дата бронирований')
 ] = None) -> list[BookingOut]:
-    return dict_service.list_bookings(date)
+    return service.list_bookings(date)
 
 @app.get(
     '/api/bookings/{id}',
@@ -53,7 +53,7 @@ def get_bookings(date: Annotated[
 )
 def get_booking_by_id(id: Annotated[UUID, Path(description='Номер бронирования.')]):
     try:
-        return dict_service.search_booking(id)
+        return service.search_booking(id)
     except BookingNotExistException as e:
         return JSONResponse(dict(ErrorMessage(message=str(e))), status.HTTP_404_NOT_FOUND)
 
@@ -67,6 +67,6 @@ def get_booking_by_id(id: Annotated[UUID, Path(description='Номер брон�
 )
 def delete_booking(id: Annotated[UUID, Path(description='Номер бронирования.')]):
     try:
-        return dict_service.cancel_booking(id)
+        return service.cancel_booking(id)
     except BookingNotExistException as e:
         return JSONResponse(dict(ErrorMessage(message=str(e))), status.HTTP_404_NOT_FOUND)
