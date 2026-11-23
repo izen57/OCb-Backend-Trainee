@@ -1,5 +1,9 @@
 # Взял код с https://docs.pytest.org/en/stable/example/simple.html#incremental-testing-test-steps.
 import pytest
+from sqlmodel import SQLModel, Session, StaticPool, create_engine
+
+from main import app
+
 
 # История провалов тестов по каждому классу и индексу параметризации.
 _test_failed_incremental: dict[str, dict[tuple[int, ...], str]] = {}
@@ -46,3 +50,25 @@ def pytest_configure(config):
     config.addinivalue_line(
         'markers', 'incremental: mark test to run only on named environment'
     )
+
+# @pytest.fixture(name='session')  
+# def session_fixture():  
+#     engine = create_engine(
+#         'sqlite://',
+#         connect_args={'check_same_thread': False},
+#         poolclass=StaticPool
+#     )
+#     SQLModel.metadata.create_all(engine)
+#     with Session(engine) as session:
+#         yield session
+
+# @pytest.fixture(name='client')  
+# def client_fixture(session: Session):  
+#     def get_session_override():  
+#         return session
+
+#     app.dependency_overrides[get_session] = get_session_override  
+
+#     client = TestClient(app)  
+#     yield client  
+#     app.dependency_overrides.clear()

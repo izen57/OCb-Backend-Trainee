@@ -1,7 +1,8 @@
 from datetime import date
-from typing import Literal
-from uuid import UUID
+from enum import StrEnum
+from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
+from sqlmodel import Field as sqlField, SQLModel
 
 
 class BookingCreate(BaseModel):
@@ -14,9 +15,10 @@ class BookingCreate(BaseModel):
         title='Номер в формате +7XXXXXXXXXX (ровно 10 цифр после +7).',
         pattern=r'^\+7\d{10}$'
     )
-    booking_date: date = Field(
+    booking_date: date = sqlField(
         title='Дата бронирования',
-        description='Не в прошлом и не дальше чем через 30 дней.'
+        description='Не в прошлом и не дальше чем через 30 дней.',
+        index=True
     )
     booking_time: int = Field(
         title='Время бронирования',
@@ -26,13 +28,15 @@ class BookingCreate(BaseModel):
     )
     guests: int = Field(title='Всего гостей.', ge=1, le=10)
 
-class BookingStore(BookingCreate):
-    status: Literal['active', 'cancelled'] = Field(title='Статус бронирования («активно», либо «отменено»).')
+class BookingStatus(StrEnum):
+    ACTIVE = 'active'
+    CANCELLED = 'cancelled'
 
-class BookingOut(BookingStore):
-    id: UUID = Field(title='Номер бронирования.')
+class BookingStore(BookingCreate, SQLModel, table=True):
+    id: UUID = sqlField(primary_key=True, title='Номер бронирования.', default_factory=uuid4)
+    status: BookingStatus = Field(title='Статус бронирования («активно», либо «отменено»).')
 
-class ErrorMessage(BaseModel):
+class ErrorMessage(SQLModel):
     message: str
 
 bna_error_message: str = 'Не удалось забронировать стол на '\
